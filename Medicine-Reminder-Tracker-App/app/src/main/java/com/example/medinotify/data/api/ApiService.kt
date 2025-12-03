@@ -5,55 +5,106 @@ import retrofit2.http.*
 
 interface ApiService {
 
-    /* ------------------ MEDICINE ------------------ */
+    /* ------------------ 1) MEDICINES ------------------ */
+// THÊM VÀO ĐẦU ApiService
+    @POST("index.php?action=login")
+    suspend fun login(@Body body: LoginRequest): Response<LoginResponse>
 
-    @GET("api.php")
+    @POST("index.php?action=googleLogin")
+    suspend fun googleLogin(@Body body: GoogleLoginRequest): Response<LoginResponse>
+    @GET("index.php")  // ĐÃ ĐỔI TỪ api.php → index.php
     suspend fun getMedicines(
         @Query("action") action: String = "getMedicines",
         @Query("userId") userId: String
     ): Response<MedicineListResponse>
 
-    @GET("api.php")
-    suspend fun getMedicinesByDate(
-        @Query("action") action: String = "getMedicinesByDate",
-        @Query("userId") userId: String,
-        @Query("date") date: String
-    ): Response<MedicineListResponse>
-
-    @POST("api.php?action=addMedicine")
+    @POST("index.php?action=addMedicine")  // ĐÃ ĐỔI
     suspend fun addMedicine(
         @Body body: MedicineDTO
     ): Response<ApiResponse>
 
-    @DELETE("api.php")
+    @DELETE("index.php")  // ĐÃ ĐỔI
     suspend fun deleteMedicine(
         @Query("action") action: String = "deleteMedicine",
         @Query("medicineId") medicineId: String
     ): Response<ApiResponse>
 
 
-    /* ------------------ SCHEDULE (not used much) ------------------ */
 
-    @GET("api.php")
-    suspend fun getSchedule(
-        @Query("action") action: String = "getSchedule",
-        @Query("medicineId") medicineId: String
-    ): Response<ScheduleResponse>
+    /* ------------------ 2) SCHEDULE ------------------ */
 
-
-    /* ------------------ LOG ENTRY (HomeScreen dùng) ------------------ */
-
-    // ⭐ Get all schedule for selected date (LogEntry + Medicine JOIN)
-    @GET("api.php")
+    @GET("index.php")  // ĐÃ ĐỔI
     suspend fun getScheduleByDate(
         @Query("action") action: String = "getScheduleByDate",
         @Query("userId") userId: String,
         @Query("date") date: String
     ): Response<LogEntryResponse>
 
-    // ⭐ Mark log taken
-    @POST("api.php?action=markTaken")
-    suspend fun markLogTaken(
-        @Body body: Map<String, String>   // JSON → PHP nhận được
+
+
+    /* ------------------ 3) MARK TAKEN ------------------ */
+
+    @POST("index.php?action=markTaken")  // ĐÃ ĐỔI
+    suspend fun markTaken(
+        @Body body: Map<String, String>
+    ): Response<ActionResponse>
+
+
+
+    /* ------------------ 4) MARK LATER ------------------ */
+
+    @POST("index.php?action=markLater")  // ĐÃ ĐỔI
+    suspend fun markLater(
+        @Body body: Map<String, String>
+    ): Response<ActionResponse>
+
+
+
+    /* ------------------ 5) MARK MISSED ------------------ */
+
+    @POST("index.php?action=markMissed")  // ĐÃ ĐỔI
+    suspend fun markMissed(
+        @Body body: Map<String, String>
+    ): Response<ActionResponse>
+
+
+
+    /* ------------------ 6) GET LOG DETAIL ------------------ */
+
+    @GET("index.php")  // ĐÃ ĐỔI
+    suspend fun getLogDetail(
+        @Query("action") action: String = "getLogDetail",
+        @Query("logId") logId: String
+    ): Response<LogDetailResponse>
+
+
+
+    /* ------------------ 7) SAVE FCM TOKEN ------------------ */
+
+    @POST("index.php?action=saveToken")  // ĐÃ ĐỔI
+    suspend fun saveToken(
+        @Body body: Map<String, String>
     ): Response<ApiResponse>
+
+
+
+    /* ------------------ 8) CHECK REMINDER ------------------ */
+
+    @GET("index.php")  // ĐÃ ĐỔI
+    suspend fun checkReminder(
+        @Query("action") action: String = "checkReminder",
+        @Query("userId") userId: String
+    ): Response<ApiResponse>
+    // THÊM VÀO CUỐI ApiService
+    @POST("index.php?action=forgotPassword")
+    suspend fun forgotPassword(@Body body: ForgotPasswordRequest): Response<ApiResponse>
+
+    @POST("index.php?action=verifyCode")
+    suspend fun verifyCode(@Body body: VerifyCodeRequest): Response<ApiResponse>
+
+    @POST("index.php?action=resetPassword")
+    suspend fun resetPassword(@Body body: ResetPasswordRequest): Response<ApiResponse>
+    @POST("index.php?action=register")
+    suspend fun register(@Body body: RegisterRequest): Response<RegisterResponse>
+
 }

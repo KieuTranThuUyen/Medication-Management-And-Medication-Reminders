@@ -1,3 +1,5 @@
+// ======= FILE HOÀN CHỈNH SAU KHI ĐÃ SỬA =======
+
 package com.example.medinotify.ui.screens.addmedicine
 
 import android.app.DatePickerDialog
@@ -38,13 +40,13 @@ fun FrequencyChip(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
-    mainPink: Color
+    mainColor: Color
 ) {
     AssistChip(
         onClick = onClick,
         label = { Text(label) },
         colors = AssistChipDefaults.assistChipColors(
-            containerColor = if (selected) mainPink else Color.LightGray.copy(alpha = 0.3f),
+            containerColor = if (selected) mainColor else Color.LightGray.copy(alpha = 0.3f),
             labelColor = if (selected) Color.White else Color.DarkGray
         )
     )
@@ -65,10 +67,8 @@ fun AddMedicineScreen(navController: NavController) {
 
     var timeList by remember { mutableStateOf(listOf<String>()) }
 
-    // ⭐ Thêm state GHI CHÚ
     var notes by remember { mutableStateOf("") }
 
-    // ⭐ Frequency: Daily, Once
     var frequency by remember { mutableStateOf("Daily") }
 
     val context = LocalContext.current
@@ -88,7 +88,40 @@ fun AddMedicineScreen(navController: NavController) {
         return sdfDay.format(sdfInput.parse(date)!!)
     }
 
+    // ================ EDIT REMINDER ================
     fun editReminder() {
+
+        if (frequency == "Daily") {
+
+            fun openSequential(i: Int) {
+                if (i >= timeList.size) return
+
+                TimePickerDialog(
+                    context,
+                    { _, h, m ->
+                        val ampm = if (h >= 12) "PM" else "AM"
+                        val h12 = when {
+                            h == 0 -> 12
+                            h > 12 -> h - 12
+                            else -> h
+                        }
+
+                        val newTime = String.format(Locale.US, "%02d:%02d %s", h12, m, ampm)
+                        timeList = timeList.toMutableList().also { it[i] = newTime }
+
+                        openSequential(i + 1)
+                    },
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
+                    false
+                ).show()
+            }
+
+            openSequential(0)
+            return
+        }
+
+        // If Once → pick date first
         DatePickerDialog(
             context,
             { _, year, month, day ->
@@ -101,7 +134,6 @@ fun AddMedicineScreen(navController: NavController) {
                     TimePickerDialog(
                         context,
                         { _, h, m ->
-
                             val ampm = if (h >= 12) "PM" else "AM"
                             val h12 = when {
                                 h == 0 -> 12
@@ -151,13 +183,12 @@ fun AddMedicineScreen(navController: NavController) {
     }
 
     // ================= COLORS =================
-    val mainPink = Color(0xFFFF6B6B)
-    val blueTitle = Color(0xFF2C60FF)
+    val mainBlue = Color(0xFF2C60FF)
     val placeholderGray = Color.LightGray
-    val softPinkBG = Color(0xFFFFF0E5)
+    val softBlueBG = Color(0xFFEAF0FF)
 
     val textFieldColors = TextFieldDefaults.colors(
-        focusedIndicatorColor = mainPink,
+        focusedIndicatorColor = mainBlue,
         unfocusedIndicatorColor = Color.Gray,
         focusedContainerColor = Color.Transparent,
         unfocusedContainerColor = Color.Transparent
@@ -173,10 +204,10 @@ fun AddMedicineScreen(navController: NavController) {
             .verticalScroll(rememberScrollState())
     ) {
 
-        // ---------- HEADER ----------
+        // HEADER
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = mainPink)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = mainBlue)
             }
 
             Text(
@@ -185,7 +216,7 @@ fun AddMedicineScreen(navController: NavController) {
                 modifier = Modifier.weight(1f),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = blueTitle
+                color = mainBlue
             )
 
             Spacer(Modifier.width(48.dp))
@@ -193,7 +224,7 @@ fun AddMedicineScreen(navController: NavController) {
 
         Spacer(Modifier.height(20.dp))
 
-        // ---------- NAME ----------
+        // NAME
         OutlinedTextField(
             value = medicineName,
             onValueChange = { medicineName = it },
@@ -205,7 +236,7 @@ fun AddMedicineScreen(navController: NavController) {
 
         Spacer(Modifier.height(15.dp))
 
-        // ---------- TYPE ----------
+        // TYPE
         var expanded by remember { mutableStateOf(false) }
 
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -214,7 +245,7 @@ fun AddMedicineScreen(navController: NavController) {
                 value = medicineType,
                 readOnly = true,
                 label = { Text("Loại thuốc") },
-                trailingIcon = { Icon(Icons.Filled.ArrowDropDown, null, tint = mainPink) },
+                trailingIcon = { Icon(Icons.Filled.ArrowDropDown, null, tint = mainBlue) },
                 modifier = Modifier
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth(),
@@ -237,7 +268,7 @@ fun AddMedicineScreen(navController: NavController) {
 
         Spacer(Modifier.height(15.dp))
 
-        // ---------- DOSAGE ----------
+        // DOSAGE
         OutlinedTextField(
             value = dosage,
             onValueChange = { dosage = it },
@@ -247,35 +278,20 @@ fun AddMedicineScreen(navController: NavController) {
             colors = textFieldColors
         )
 
-        Spacer(Modifier.height(15.dp))
-
-        // ---------- NOTES (NEW) ----------
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text("Ghi chú") },
-            placeholder = { Text("Ví dụ: Uống sau ăn, tránh buổi tối", color = placeholderGray) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
-            maxLines = 5,
-            colors = textFieldColors
-        )
-
         Spacer(Modifier.height(20.dp))
 
-        // ---------- FREQUENCY ----------
-        Text("Tần suất uống", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = mainPink)
+        // FREQUENCY
+        Text("Tần suất uống", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = mainBlue)
         Spacer(Modifier.height(10.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FrequencyChip("Uống hằng ngày", frequency == "Daily", { frequency = "Daily" }, mainPink)
-            FrequencyChip("Chỉ uống vào ngày đã chọn", frequency == "Once", { frequency = "Once" }, mainPink)
+            FrequencyChip("Uống hằng ngày", frequency == "Daily", { frequency = "Daily" }, mainBlue)
+            FrequencyChip("Chỉ uống vào ngày đã chọn", frequency == "Once", { frequency = "Once" }, mainBlue)
         }
 
         Spacer(Modifier.height(20.dp))
 
-        // ---------- DATE ----------
+        // DATE
         OutlinedTextField(
             value = reminderDate,
             readOnly = true,
@@ -285,7 +301,7 @@ fun AddMedicineScreen(navController: NavController) {
                 Icon(
                     Icons.Default.DateRange,
                     null,
-                    tint = mainPink,
+                    tint = mainBlue,
                     modifier = Modifier.clickable { editReminder() }
                 )
             },
@@ -295,7 +311,7 @@ fun AddMedicineScreen(navController: NavController) {
 
         Spacer(Modifier.height(20.dp))
 
-        // ---------- TIMES PER DAY ----------
+        // QUANTITY
         OutlinedTextField(
             value = quantity,
             onValueChange = {
@@ -313,7 +329,7 @@ fun AddMedicineScreen(navController: NavController) {
 
         Spacer(Modifier.height(20.dp))
 
-        // ---------- TIME PICKERS ----------
+        // TIME PICKERS
         timeList.forEachIndexed { index, time ->
             OutlinedTextField(
                 value = time,
@@ -324,7 +340,7 @@ fun AddMedicineScreen(navController: NavController) {
                     Icon(
                         Icons.Default.AccessTime,
                         null,
-                        tint = mainPink,
+                        tint = mainBlue,
                         modifier = Modifier.clickable { pickSingleTime(index) }
                     )
                 },
@@ -337,7 +353,7 @@ fun AddMedicineScreen(navController: NavController) {
 
         Spacer(Modifier.height(20.dp))
 
-        // ---------- REMINDER SWITCH ----------
+        // =============== REMINDER SWITCH ===============
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Bật báo thức", color = Color.Gray)
             Spacer(Modifier.weight(1f))
@@ -345,57 +361,82 @@ fun AddMedicineScreen(navController: NavController) {
                 checked = enableReminder,
                 onCheckedChange = { enableReminder = it },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = mainPink,
-                    checkedTrackColor = mainPink.copy(alpha = 0.4f)
+                    checkedThumbColor = mainBlue,
+                    checkedTrackColor = mainBlue.copy(alpha = 0.4f)
                 )
             )
         }
 
         Spacer(Modifier.height(20.dp))
 
-        // ---------- PREVIEW ----------
-        if (enableReminder && reminderDate.isNotEmpty()) {
+        // =============== REMINDER BOX (NEW!) ===============
+        if (enableReminder && timeList.isNotEmpty()) {
 
-            val dayName = getDayName(reminderDate)
+            val displayDay = when (frequency) {
+                "Daily" -> "Daily"
+                "Once" -> if (reminderDate.isNotEmpty()) getDayName(reminderDate) else ""
+                else -> ""
+            }
 
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(softPinkBG, RoundedCornerShape(12.dp))
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .background(Color(0xFFEAF0FF), RoundedCornerShape(12.dp))
+                    .padding(16.dp)
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
 
-                Text(
-                    text = if (frequency == "Daily") "Daily" else dayName,
-                    modifier = Modifier.weight(1f),
-                    fontWeight = FontWeight.Bold
-                )
+                    Text(
+                        text = displayDay,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
 
-                if (timeList.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier.weight(1.5f)
+                    Spacer(Modifier.width(16.dp))
+
+                    val currentTime = timeList.first()
+                    val parts = currentTime.split(" ")
+
+                    Text(parts[0], fontSize = 18.sp)
+                    Spacer(Modifier.width(10.dp))
+                    Text(parts[1], fontSize = 18.sp)
+
+                    Spacer(Modifier.width(16.dp))
+
+                    Button(
+                        onClick = { editReminder() },
+                        colors = ButtonDefaults.buttonColors(Color(0xFFFFB800)),
+                        shape = RoundedCornerShape(10.dp)
                     ) {
-                        timeList.forEach { t ->
-                            Text(t, fontSize = 15.sp)
-                        }
+                        Text("Edit", color = Color.White)
                     }
                 }
-
-                Button(
-                    onClick = { editReminder() },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(Color(0xFFFFB800)),
-                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp)
-                ) {
-                    Text("Edit", color = Color.White)
-                }
             }
+
+            Spacer(Modifier.height(20.dp))
         }
 
-        Spacer(Modifier.height(30.dp))
+        // NOTES
+        OutlinedTextField(
+            value = notes,
+            onValueChange = { notes = it },
+            label = { Text("Ghi chú") },
+            placeholder = { Text("Ví dụ: Uống sau ăn, tránh buổi tối", color = placeholderGray) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp),
+            maxLines = 5,
+            colors = textFieldColors
+        )
 
-        // ---------- SAVE ----------
+        Spacer(Modifier.height(20.dp))
+
+        // SAVE
         Button(
             onClick = {
                 if (
@@ -429,7 +470,6 @@ fun AddMedicineScreen(navController: NavController) {
                     frequency = frequency
                 )
 
-                // ⭐⭐ SỬA ĐÚNG TÊN HÀM ⭐⭐
                 vm.addMedicine(dto) {
                     Toast.makeText(context, "Đã lưu thuốc!", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
@@ -439,10 +479,11 @@ fun AddMedicineScreen(navController: NavController) {
                 .fillMaxWidth()
                 .height(55.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(mainPink)
+            colors = ButtonDefaults.buttonColors(mainBlue)
         ) {
             Text("Lưu", color = Color.White, fontSize = 18.sp)
         }
+
         Spacer(Modifier.height(40.dp))
     }
 }

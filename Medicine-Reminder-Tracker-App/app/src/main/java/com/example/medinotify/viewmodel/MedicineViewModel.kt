@@ -11,7 +11,7 @@ class MedicineViewModel(
 ) : ViewModel() {
 
     /* -----------------------------------------------------------
-       LOG ENTRY (HomeScreen)
+       1) LỊCH UỐNG THUỐC THEO NGÀY (HomeScreen)
        ----------------------------------------------------------- */
 
     var daySchedule by mutableStateOf(listOf<LogEntryDTO>())
@@ -36,10 +36,41 @@ class MedicineViewModel(
         }
     }
 
+    /* ====================== ACTIONS ====================== */
+
+    // ✔ ĐÁNH DẤU ĐÃ UỐNG
     fun markAsTaken(logId: String, date: String, userId: String = "U001") {
         viewModelScope.launch {
             try {
-                val result = repo.markLogTaken(logId)
+                val result = repo.markTaken(logId)
+                if (result.body()?.success == true) {
+                    loadScheduleByDate(userId, date)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // ✔ LÁT NỮA (delay X phút)
+    fun markLater(logId: String, minutes: Int, date: String, userId: String = "U001") {
+        viewModelScope.launch {
+            try {
+                val result = repo.markLater(logId, minutes)
+                if (result.body()?.success == true) {
+                    loadScheduleByDate(userId, date)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // ✔ BỎ QUA (Missed)
+    fun markMissed(logId: String, date: String, userId: String = "U001") {
+        viewModelScope.launch {
+            try {
+                val result = repo.markMissed(logId)
                 if (result.body()?.success == true) {
                     loadScheduleByDate(userId, date)
                 }
@@ -51,7 +82,7 @@ class MedicineViewModel(
 
 
     /* -----------------------------------------------------------
-       MEDICINE CRUD
+       2) MEDICINE CRUD
        ----------------------------------------------------------- */
 
     var medicines by mutableStateOf(listOf<MedicineDTO>())
